@@ -294,7 +294,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you use RadMaskQC in your research, please cite:
 
 ```bibtex
-@software{radmaskqc2024,
+@software{radmaskqc2026,
   title = {RadMaskQC: Medical Image Segmentation Quality Checking},
   author = {Your Name},
   year = {2024},
