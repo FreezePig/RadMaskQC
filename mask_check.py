@@ -56,7 +56,7 @@ from check_utils import (
     detect_elongated_projections,
     detect_sharp_concavities,
     detect_ct_value_anomalies,
-    detect_internal_holes
+    detect_internal_holes,
 )
 
 
@@ -83,7 +83,10 @@ def print_report(report: dict, detailed: bool = False):
     if detailed:
         print("\nDetailed Results:")
         for key, value in report.items():
-            if key not in ["is_valid", "summary", "output_dir", "visualizations"] and value:
+            if (
+                key not in ["is_valid", "summary", "output_dir", "visualizations"]
+                and value
+            ):
                 if isinstance(value, list) and len(value) > 0:
                     print(f"\n{key} ({len(value)} items):")
                     for i, item in enumerate(value[:5], 1):  # Show first 5 items
@@ -114,7 +117,7 @@ def cmd_detect_2d_noise(args):
         args.mask,
         output_dir=args.output,
         min_area_threshold=args.min_area,
-        file_prefix=args.prefix
+        file_prefix=args.prefix,
     )
 
     print_report(report, args.detailed)
@@ -122,7 +125,7 @@ def cmd_detect_2d_noise(args):
     # Save report to JSON if requested
     if args.output:
         output_file = os.path.join(args.output, "2d_noise_report.json")
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(report, f, indent=2)
         print(f"Report saved to: {output_file}")
 
@@ -132,9 +135,7 @@ def cmd_check_connectivity(args):
     print(f"\nChecking 3D connectivity for: {args.mask}")
 
     report = check_3d_connectivity(
-        args.mask,
-        max_components=args.max_components,
-        connectivity=args.connectivity
+        args.mask, max_components=args.max_components, connectivity=args.connectivity
     )
 
     print_report(report, args.detailed)
@@ -142,7 +143,7 @@ def cmd_check_connectivity(args):
     # Save report to JSON if requested
     if args.output:
         output_file = os.path.join(args.output, "connectivity_report.json")
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(report, f, indent=2)
         print(f"Report saved to: {output_file}")
 
@@ -157,7 +158,7 @@ def cmd_detect_elongated(args):
         file_prefix=args.prefix,
         aspect_ratio_threshold=args.aspect_ratio,
         convexity_threshold=args.convexity,
-        visualize=args.visualize
+        visualize=args.visualize,
     )
 
     print_report(report, args.detailed)
@@ -165,7 +166,7 @@ def cmd_detect_elongated(args):
     # Save report to JSON if requested
     if args.output:
         output_file = os.path.join(args.output, "elongated_report.json")
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(report, f, indent=2)
         print(f"Report saved to: {output_file}")
 
@@ -180,7 +181,7 @@ def cmd_detect_concavities(args):
         file_prefix=args.prefix,
         sharp_angle_threshold=args.angle_threshold,
         distance_threshold=args.distance_threshold,
-        visualize=args.visualize
+        visualize=args.visualize,
     )
 
     print_report(report, args.detailed)
@@ -188,7 +189,7 @@ def cmd_detect_concavities(args):
     # Save report to JSON if requested
     if args.output:
         output_file = os.path.join(args.output, "concavities_report.json")
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(report, f, indent=2)
         print(f"Report saved to: {output_file}")
 
@@ -209,7 +210,7 @@ def cmd_detect_ct_anomalies(args):
         enable_ct_check=True,
         min_leak_volume=args.min_volume,
         z_score_threshold=args.z_score,
-        visualize=args.visualize
+        visualize=args.visualize,
     )
 
     print_report(report, args.detailed)
@@ -217,7 +218,7 @@ def cmd_detect_ct_anomalies(args):
     # Save report to JSON if requested
     if args.output:
         output_file = os.path.join(args.output, "ct_anomalies_report.json")
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(report, f, indent=2)
         print(f"Report saved to: {output_file}")
 
@@ -238,7 +239,7 @@ def cmd_detect_holes(args):
         max_hole_area=args.max_area,
         threshold_air=args.threshold_air,
         threshold_soft=args.threshold_soft,
-        visualize=args.visualize
+        visualize=args.visualize,
     )
 
     print_report(report, args.detailed)
@@ -246,7 +247,7 @@ def cmd_detect_holes(args):
     # Save report to JSON if requested
     if args.output:
         output_file = os.path.join(args.output, "holes_report.json")
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(report, f, indent=2)
         print(f"Report saved to: {output_file}")
 
@@ -267,16 +268,14 @@ def cmd_check_all(args):
     def save_individual_report(report_name, report):
         if args.output:
             output_file = os.path.join(args.output, f"{report_name}_report.json")
-            with open(output_file, 'w') as f:
+            with open(output_file, "w") as f:
                 json.dump(report, f, indent=2)
             print(f"Report saved to: {output_file}")
 
     # 1. Check 3D connectivity
     print("\n[1/6] Checking 3D connectivity...")
     connectivity_report = check_3d_connectivity(
-        args.mask,
-        max_components=args.max_components,
-        connectivity=args.connectivity
+        args.mask, max_components=args.max_components, connectivity=args.connectivity
     )
     all_reports["connectivity"] = connectivity_report
     if not connectivity_report["is_valid"]:
@@ -293,7 +292,7 @@ def cmd_check_all(args):
             args.mask,
             output_dir=args.output,
             min_area_threshold=args.min_area,
-            file_prefix=""
+            file_prefix="",
         )
         all_reports["2d_noise"] = noise_2d_report
         if not noise_2d_report["is_valid"]:
@@ -311,7 +310,7 @@ def cmd_check_all(args):
                 file_prefix="",
                 aspect_ratio_threshold=args.aspect_ratio,
                 convexity_threshold=args.convexity,
-                visualize=args.visualize
+                visualize=args.visualize,
             )
             all_reports["elongated"] = elongated_report
             if not elongated_report["is_valid"]:
@@ -319,7 +318,9 @@ def cmd_check_all(args):
             print_report(elongated_report, detailed=False)
             save_individual_report("elongated", elongated_report)
             if not elongated_report["is_valid"]:
-                print("\n⚠ Error detected in elongated projections detection. Stopping further checks.")
+                print(
+                    "\n⚠ Error detected in elongated projections detection. Stopping further checks."
+                )
             else:
                 # 4. Detect sharp concavities
                 print("[4/6] Detecting sharp concavities...")
@@ -329,7 +330,7 @@ def cmd_check_all(args):
                     file_prefix="",
                     sharp_angle_threshold=args.angle_threshold,
                     distance_threshold=args.distance_threshold,
-                    visualize=args.visualize
+                    visualize=args.visualize,
                 )
                 all_reports["concavities"] = concavities_report
                 if not concavities_report["is_valid"]:
@@ -337,7 +338,9 @@ def cmd_check_all(args):
                 print_report(concavities_report, detailed=False)
                 save_individual_report("concavities", concavities_report)
                 if not concavities_report["is_valid"]:
-                    print("\n⚠ Error detected in sharp concavities detection. Stopping further checks.")
+                    print(
+                        "\n⚠ Error detected in sharp concavities detection. Stopping further checks."
+                    )
                 else:
                     # 5. Detect internal holes (if CT provided)
                     if args.ct:
@@ -350,7 +353,7 @@ def cmd_check_all(args):
                             max_hole_area=args.max_area,
                             threshold_air=args.threshold_air,
                             threshold_soft=args.threshold_soft,
-                            visualize=args.visualize
+                            visualize=args.visualize,
                         )
                         all_reports["holes"] = holes_report
                         if not holes_report["is_valid"]:
@@ -358,7 +361,9 @@ def cmd_check_all(args):
                         print_report(holes_report, detailed=False)
                         save_individual_report("holes", holes_report)
                         if not holes_report["is_valid"]:
-                            print("\n⚠ Error detected in internal holes detection. Stopping further checks.")
+                            print(
+                                "\n⚠ Error detected in internal holes detection. Stopping further checks."
+                            )
                         else:
                             # 6. Detect CT anomalies (if CT provided)
                             if args.ct:
@@ -370,7 +375,7 @@ def cmd_check_all(args):
                                     file_prefix="",
                                     min_leak_volume=args.min_volume,
                                     z_score_threshold=args.z_score,
-                                    visualize=args.visualize
+                                    visualize=args.visualize,
                                 )
                                 all_reports["ct_anomalies"] = ct_report
                                 if not ct_report["is_valid"]:
@@ -378,11 +383,17 @@ def cmd_check_all(args):
                                 print_report(ct_report, detailed=False)
                                 save_individual_report("ct_anomalies", ct_report)
                                 if not ct_report["is_valid"]:
-                                    print("\n⚠ Error detected in CT anomalies detection. Stopping further checks.")
+                                    print(
+                                        "\n⚠ Error detected in CT anomalies detection. Stopping further checks."
+                                    )
                             else:
-                                print("[6/6] Skipping CT anomaly detection (no CT image provided)")
+                                print(
+                                    "[6/6] Skipping CT anomaly detection (no CT image provided)"
+                                )
                     else:
-                        print("[5/6] Skipping internal hole detection (no CT image provided)")
+                        print(
+                            "[5/6] Skipping internal hole detection (no CT image provided)"
+                        )
                         # 6. Detect CT anomalies (if CT provided)
                         if args.ct:
                             print("[6/6] Detecting CT value anomalies...")
@@ -393,7 +404,7 @@ def cmd_check_all(args):
                                 file_prefix="",
                                 min_leak_volume=args.min_volume,
                                 z_score_threshold=args.z_score,
-                                visualize=args.visualize
+                                visualize=args.visualize,
                             )
                             all_reports["ct_anomalies"] = ct_report
                             if not ct_report["is_valid"]:
@@ -401,9 +412,13 @@ def cmd_check_all(args):
                             print_report(ct_report, detailed=False)
                             save_individual_report("ct_anomalies", ct_report)
                             if not ct_report["is_valid"]:
-                                print("\n⚠ Error detected in CT anomalies detection. Stopping further checks.")
+                                print(
+                                    "\n⚠ Error detected in CT anomalies detection. Stopping further checks."
+                                )
                         else:
-                            print("[6/6] Skipping CT anomaly detection (no CT image provided)")
+                            print(
+                                "[6/6] Skipping CT anomaly detection (no CT image provided)"
+                            )
 
     # Overall summary
     print("\n" + "=" * 60)
@@ -420,11 +435,8 @@ def cmd_check_all(args):
     # Save comprehensive report
     if args.output:
         output_file = os.path.join(args.output, "comprehensive_report.json")
-        comprehensive_report = {
-            "overall_valid": overall_valid,
-            "checks": all_reports
-        }
-        with open(output_file, 'w') as f:
+        comprehensive_report = {"overall_valid": overall_valid, "checks": all_reports}
+        with open(output_file, "w") as f:
             json.dump(comprehensive_report, f, indent=2)
         print(f"Comprehensive report saved to: {output_file}")
 
@@ -434,13 +446,11 @@ def main():
     parser = argparse.ArgumentParser(
         description="Medical Image Segmentation Quality Checking CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
 
     parser.add_argument(
-        "-v", "--version",
-        action="version",
-        version="mask_check_cli.py 1.0"
+        "-v", "--version", action="version", version="mask_check_cli.py 1.0"
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
@@ -448,134 +458,264 @@ def main():
     # Common arguments for commands that need mask
     mask_args = argparse.ArgumentParser(add_help=False)
     mask_args.add_argument("mask", help="Path to mask file (.nii, .nii.gz, .npy, .dcm)")
-    mask_args.add_argument("-o", "--output", help="Output directory for results and visualizations")
+    mask_args.add_argument(
+        "-o", "--output", help="Output directory for results and visualizations"
+    )
     mask_args.add_argument("--prefix", default="", help="File prefix for output files")
-    mask_args.add_argument("--detailed", action="store_true", help="Print detailed report")
-    mask_args.add_argument("--no-viz", dest="visualize", action="store_false", help="Disable visualization")
+    mask_args.add_argument(
+        "--detailed", action="store_true", help="Print detailed report"
+    )
+    mask_args.add_argument(
+        "--no-viz", dest="visualize", action="store_false", help="Disable visualization"
+    )
 
     # Common arguments for commands that need both mask and CT
     mask_ct_args = argparse.ArgumentParser(add_help=False)
-    mask_ct_args.add_argument("mask", help="Path to mask file (.nii, .nii.gz, .npy, .dcm)")
+    mask_ct_args.add_argument(
+        "mask", help="Path to mask file (.nii, .nii.gz, .npy, .dcm)"
+    )
     mask_ct_args.add_argument("ct", help="Path to CT image file")
-    mask_ct_args.add_argument("-o", "--output", help="Output directory for results and visualizations")
-    mask_ct_args.add_argument("--prefix", default="", help="File prefix for output files")
-    mask_ct_args.add_argument("--detailed", action="store_true", help="Print detailed report")
-    mask_ct_args.add_argument("--no-viz", dest="visualize", action="store_true", default=True, help="Disable visualization")
+    mask_ct_args.add_argument(
+        "-o", "--output", help="Output directory for results and visualizations"
+    )
+    mask_ct_args.add_argument(
+        "--prefix", default="", help="File prefix for output files"
+    )
+    mask_ct_args.add_argument(
+        "--detailed", action="store_true", help="Print detailed report"
+    )
+    mask_ct_args.add_argument(
+        "--no-viz",
+        dest="visualize",
+        action="store_true",
+        default=True,
+        help="Disable visualization",
+    )
 
     # detect-2d-noise command
     parser_2d_noise = subparsers.add_parser(
         "detect-2d-noise",
         parents=[mask_args],
         help="Detect 2D noise in mask slices",
-        description="Detect small noise areas in 2D mask slices using connected component analysis"
+        description="Detect small noise areas in 2D mask slices using connected component analysis",
     )
-    parser_2d_noise.add_argument("--min-area", type=int, default=10,
-                                 help="Minimum area threshold for noise detection (default: 10 pixels)")
+    parser_2d_noise.add_argument(
+        "--min-area",
+        type=int,
+        default=10,
+        help="Minimum area threshold for noise detection (default: 10 pixels)",
+    )
 
     # check-connectivity command
     parser_connectivity = subparsers.add_parser(
         "check-connectivity",
         parents=[mask_args],
         help="Check if mask contains multiple 3D ROIs",
-        description="Check if mask contains multiple independent 3D ROIs using connected component analysis"
+        description="Check if mask contains multiple independent 3D ROIs using connected component analysis",
     )
-    parser_connectivity.add_argument("--max-components", type=int, default=1,
-                                   help="Maximum allowed number of 3D components (default: 1)")
-    parser_connectivity.add_argument("--connectivity", type=int, default=3, choices=[1, 2, 3],
-                                   help="Connectivity type: 1=6-conn, 2=18-conn, 3=26-conn (default: 3)")
+    parser_connectivity.add_argument(
+        "--max-components",
+        type=int,
+        default=1,
+        help="Maximum allowed number of 3D components (default: 1)",
+    )
+    parser_connectivity.add_argument(
+        "--connectivity",
+        type=int,
+        default=3,
+        choices=[1, 2, 3],
+        help="Connectivity type: 1=6-conn, 2=18-conn, 3=26-conn (default: 3)",
+    )
 
     # detect-elongated command
     parser_elongated = subparsers.add_parser(
         "detect-elongated",
         parents=[mask_args],
         help="Detect elongated projection leakage",
-        description="Detect elongated projections that may indicate segmentation leakage"
+        description="Detect elongated projections that may indicate segmentation leakage",
     )
-    parser_elongated.add_argument("--aspect-ratio", type=float, default=5.0,
-                                  help="Aspect ratio threshold (default: 5.0)")
-    parser_elongated.add_argument("--convexity", type=float, default=0.85,
-                                  help="Convexity threshold (default: 0.85)")
+    parser_elongated.add_argument(
+        "--aspect-ratio",
+        type=float,
+        default=5.0,
+        help="Aspect ratio threshold (default: 5.0)",
+    )
+    parser_elongated.add_argument(
+        "--convexity",
+        type=float,
+        default=0.85,
+        help="Convexity threshold (default: 0.85)",
+    )
 
     # detect-concavities command
     parser_concavities = subparsers.add_parser(
         "detect-concavities",
         parents=[mask_args],
         help="Detect sharp concave/convex defects",
-        description="Detect sharp concavities that may indicate segmentation issues"
+        description="Detect sharp concavities that may indicate segmentation issues",
     )
-    parser_concavities.add_argument("--angle-threshold", type=float, default=30.0,
-                                   help="Sharp angle threshold in degrees (default: 30.0)")
-    parser_concavities.add_argument("--distance-threshold", type=float, default=5.0,
-                                   help="Defect depth threshold in pixels (default: 5.0)")
+    parser_concavities.add_argument(
+        "--angle-threshold",
+        type=float,
+        default=30.0,
+        help="Sharp angle threshold in degrees (default: 30.0)",
+    )
+    parser_concavities.add_argument(
+        "--distance-threshold",
+        type=float,
+        default=5.0,
+        help="Defect depth threshold in pixels (default: 5.0)",
+    )
 
     # detect-ct-anomalies command
     parser_ct = subparsers.add_parser(
         "detect-ct-anomalies",
         parents=[mask_ct_args],
         help="Detect CT value anomalies",
-        description="Detect CT value jumps that may indicate segmentation leakage to other tissues"
+        description="Detect CT value jumps that may indicate segmentation leakage to other tissues",
     )
-    parser_ct.add_argument("--min-volume", type=int, default=50,
-                         help="Minimum anomaly region size in voxels (default: 50)")
-    parser_ct.add_argument("--z-score", type=float, default=2.0,
-                         help="Z-score threshold for anomaly detection (default: 2.0)")
+    parser_ct.add_argument(
+        "--min-volume",
+        type=int,
+        default=50,
+        help="Minimum anomaly region size in voxels (default: 50)",
+    )
+    parser_ct.add_argument(
+        "--z-score",
+        type=float,
+        default=2.0,
+        help="Z-score threshold for anomaly detection (default: 2.0)",
+    )
 
     # detect-holes command
     parser_holes = subparsers.add_parser(
         "detect-holes",
         parents=[mask_ct_args],
         help="Detect internal holes (erased tissue)",
-        description="Detect internal holes that are likely accidentally erased tumor tissue"
+        description="Detect internal holes that are likely accidentally erased tumor tissue",
     )
-    parser_holes.add_argument("--max-area", type=int, default=20,
-                             help="Maximum hole area (pixels) for noise classification (default: 20)")
-    parser_holes.add_argument("--threshold-air", type=float, default=20,
-                             help="Percentile threshold for air/normal cavity (default: 20)")
-    parser_holes.add_argument("--threshold-soft", type=float, default=50,
-                             help="Percentile threshold for soft tissue/erased tissue (default: 50)")
+    parser_holes.add_argument(
+        "--max-area",
+        type=int,
+        default=20,
+        help="Maximum hole area (pixels) for noise classification (default: 20)",
+    )
+    parser_holes.add_argument(
+        "--threshold-air",
+        type=float,
+        default=20,
+        help="Percentile threshold for air/normal cavity (default: 20)",
+    )
+    parser_holes.add_argument(
+        "--threshold-soft",
+        type=float,
+        default=50,
+        help="Percentile threshold for soft tissue/erased tissue (default: 50)",
+    )
 
     # check-all command
     parser_all = subparsers.add_parser(
         "check-all",
         help="Run all available quality checks",
-        description="Run comprehensive quality checking with all available detection methods"
+        description="Run comprehensive quality checking with all available detection methods",
     )
-    parser_all.add_argument("mask", help="Path to mask file (.nii, .nii.gz, .npy, .dcm)")
-    parser_all.add_argument("ct", nargs="?", help="Path to CT image file (optional, required for CT-based checks)")
-    parser_all.add_argument("-o", "--output", help="Output directory for results and visualizations")
-    parser_all.add_argument("--detailed", action="store_true", help="Print detailed report")
-    parser_all.add_argument("--no-viz", dest="visualize", action="store_false", default=True,
-                          help="Disable visualization")
+    parser_all.add_argument(
+        "mask", help="Path to mask file (.nii, .nii.gz, .npy, .dcm)"
+    )
+    parser_all.add_argument(
+        "ct",
+        nargs="?",
+        help="Path to CT image file (optional, required for CT-based checks)",
+    )
+    parser_all.add_argument(
+        "-o", "--output", help="Output directory for results and visualizations"
+    )
+    parser_all.add_argument(
+        "--detailed", action="store_true", help="Print detailed report"
+    )
+    parser_all.add_argument(
+        "--no-viz",
+        dest="visualize",
+        action="store_false",
+        default=True,
+        help="Disable visualization",
+    )
     # Connectivity options
-    parser_all.add_argument("--max-components", type=int, default=1,
-                          help="Maximum allowed 3D components (default: 1)")
-    parser_all.add_argument("--connectivity", type=int, default=3, choices=[1, 2, 3],
-                          help="Connectivity type: 1=6-conn, 2=18-conn, 3=26-conn (default: 3)")
+    parser_all.add_argument(
+        "--max-components",
+        type=int,
+        default=1,
+        help="Maximum allowed 3D components (default: 1)",
+    )
+    parser_all.add_argument(
+        "--connectivity",
+        type=int,
+        default=3,
+        choices=[1, 2, 3],
+        help="Connectivity type: 1=6-conn, 2=18-conn, 3=26-conn (default: 3)",
+    )
     # 2D noise options
-    parser_all.add_argument("--min-area", type=int, default=10,
-                          help="Minimum area threshold for 2D noise detection (default: 10)")
+    parser_all.add_argument(
+        "--min-area",
+        type=int,
+        default=10,
+        help="Minimum area threshold for 2D noise detection (default: 10)",
+    )
     # Elongated projection options
-    parser_all.add_argument("--aspect-ratio", type=float, default=5.0,
-                          help="Aspect ratio threshold (default: 5.0)")
-    parser_all.add_argument("--convexity", type=float, default=0.85,
-                          help="Convexity threshold (default: 0.85)")
+    parser_all.add_argument(
+        "--aspect-ratio",
+        type=float,
+        default=5.0,
+        help="Aspect ratio threshold (default: 5.0)",
+    )
+    parser_all.add_argument(
+        "--convexity",
+        type=float,
+        default=0.85,
+        help="Convexity threshold (default: 0.85)",
+    )
     # Concavities options
-    parser_all.add_argument("--angle-threshold", type=float, default=30.0,
-                          help="Sharp angle threshold in degrees (default: 30.0)")
-    parser_all.add_argument("--distance-threshold", type=float, default=5.0,
-                          help="Defect depth threshold in pixels (default: 5.0)")
+    parser_all.add_argument(
+        "--angle-threshold",
+        type=float,
+        default=30.0,
+        help="Sharp angle threshold in degrees (default: 30.0)",
+    )
+    parser_all.add_argument(
+        "--distance-threshold",
+        type=float,
+        default=5.0,
+        help="Defect depth threshold in pixels (default: 5.0)",
+    )
     # CT anomalies options
-    parser_all.add_argument("--min-volume", type=int, default=50,
-                          help="Minimum anomaly region size in voxels (default: 50)")
-    parser_all.add_argument("--z-score", type=float, default=2.0,
-                          help="Z-score threshold (default: 2.0)")
+    parser_all.add_argument(
+        "--min-volume",
+        type=int,
+        default=50,
+        help="Minimum anomaly region size in voxels (default: 50)",
+    )
+    parser_all.add_argument(
+        "--z-score", type=float, default=2.0, help="Z-score threshold (default: 2.0)"
+    )
     # Holes options
-    parser_all.add_argument("--max-area", type=int, default=20,
-                          help="Maximum hole area for noise classification (default: 20)")
-    parser_all.add_argument("--threshold-air", type=float, default=20,
-                          help="Percentile threshold for air (default: 20)")
-    parser_all.add_argument("--threshold-soft", type=float, default=50,
-                          help="Percentile threshold for soft tissue (default: 50)")
+    parser_all.add_argument(
+        "--max-area",
+        type=int,
+        default=20,
+        help="Maximum hole area for noise classification (default: 20)",
+    )
+    parser_all.add_argument(
+        "--threshold-air",
+        type=float,
+        default=20,
+        help="Percentile threshold for air (default: 20)",
+    )
+    parser_all.add_argument(
+        "--threshold-soft",
+        type=float,
+        default=50,
+        help="Percentile threshold for soft tissue (default: 50)",
+    )
 
     # Parse arguments
     args = parser.parse_args()

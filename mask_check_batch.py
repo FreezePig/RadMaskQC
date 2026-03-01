@@ -41,7 +41,7 @@ from check_utils import (
     detect_elongated_projections,
     detect_sharp_concavities,
     detect_ct_value_anomalies,
-    detect_internal_holes
+    detect_internal_holes,
 )
 
 
@@ -63,7 +63,7 @@ def process_single_case(
     min_volume: int = 50,
     z_score: float = 2.0,
     visualize: bool = True,
-    stop_on_error: bool = True
+    stop_on_error: bool = True,
 ) -> Dict[str, Any]:
     """
     Process a single patient case with all quality checks.
@@ -97,7 +97,7 @@ def process_single_case(
         "checks_completed": [],
         "checks_skipped": [],
         "error": None,
-        "reports": {}
+        "reports": {},
     }
 
     # Check if required files exist
@@ -113,16 +113,14 @@ def process_single_case(
     # Helper function to save individual report
     def save_individual_report(report_name, report):
         output_file = os.path.join(output_dir, f"{report_name}_report.json")
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(report, f, indent=2)
 
     try:
         # 1. Check 3D connectivity
         print(f"  [1/6] Checking 3D connectivity...")
         connectivity_report = check_3d_connectivity(
-            mask_file,
-            max_components=max_components,
-            connectivity=connectivity
+            mask_file, max_components=max_components, connectivity=connectivity
         )
         result["reports"]["connectivity"] = connectivity_report
         result["checks_completed"].append("connectivity")
@@ -140,7 +138,7 @@ def process_single_case(
                 mask_file,
                 output_dir=output_dir,
                 min_area_threshold=min_area,
-                file_prefix=""
+                file_prefix="",
             )
             result["reports"]["2d_noise"] = noise_2d_report
             result["checks_completed"].append("2d_noise")
@@ -160,7 +158,7 @@ def process_single_case(
                     file_prefix="",
                     aspect_ratio_threshold=aspect_ratio,
                     convexity_threshold=convexity,
-                    visualize=visualize
+                    visualize=visualize,
                 )
                 result["reports"]["elongated"] = elongated_report
                 result["checks_completed"].append("elongated")
@@ -180,7 +178,7 @@ def process_single_case(
                         file_prefix="",
                         sharp_angle_threshold=angle_threshold,
                         distance_threshold=distance_threshold,
-                        visualize=visualize
+                        visualize=visualize,
                     )
                     result["reports"]["concavities"] = concavities_report
                     result["checks_completed"].append("concavities")
@@ -203,7 +201,7 @@ def process_single_case(
                                 max_hole_area=max_area,
                                 threshold_air=threshold_air,
                                 threshold_soft=threshold_soft,
-                                visualize=visualize
+                                visualize=visualize,
                             )
                             result["reports"]["holes"] = holes_report
                             result["checks_completed"].append("holes")
@@ -228,7 +226,7 @@ def process_single_case(
                                 file_prefix="",
                                 min_leak_volume=min_volume,
                                 z_score_threshold=z_score,
-                                visualize=visualize
+                                visualize=visualize,
                             )
                             result["reports"]["ct_anomalies"] = ct_report
                             result["checks_completed"].append("ct_anomalies")
@@ -244,7 +242,9 @@ def process_single_case(
                             print(f"  [6/6] Skipping CT anomalies (no CT)")
 
         # Determine overall status
-        all_valid = all(report.get("is_valid", True) for report in result["reports"].values())
+        all_valid = all(
+            report.get("is_valid", True) for report in result["reports"].values()
+        )
         result["status"] = "passed" if all_valid else "warning"
 
     except Exception as e:
@@ -260,71 +260,120 @@ def main():
     parser = argparse.ArgumentParser(
         description="Batch processing for medical image segmentation quality checking",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
 
     parser.add_argument(
-        "root_folder",
-        help="Root folder containing all patient directories"
+        "root_folder", help="Root folder containing all patient directories"
     )
     parser.add_argument(
         "--ct-path",
         required=True,
-        help="Relative path to CT file from patient directory (e.g., 'ct/ct.nii.gz')"
+        help="Relative path to CT file from patient directory (e.g., 'ct/ct.nii.gz')",
     )
     parser.add_argument(
         "--mask-path",
         required=True,
-        help="Relative path to mask file from patient directory (e.g., 'mask/mask.nii.gz')"
+        help="Relative path to mask file from patient directory (e.g., 'mask/mask.nii.gz')",
     )
     parser.add_argument(
-        "-o", "--output",
+        "-o",
+        "--output",
         default="qc_results",
-        help="Output subdirectory name (within each patient folder, default: qc_results)"
+        help="Output subdirectory name (within each patient folder, default: qc_results)",
     )
     parser.add_argument(
         "--continue-on-error",
         action="store_true",
-        help="Continue processing remaining checks even if one check fails (default: stop on error)"
+        help="Continue processing remaining checks even if one check fails (default: stop on error)",
     )
     parser.add_argument(
         "--skip-on-error",
         action="store_true",
-        help="Skip to next patient if an error occurs (default: continue with next check)"
+        help="Skip to next patient if an error occurs (default: continue with next check)",
     )
     parser.add_argument(
-        "--summary",
-        action="store_true",
-        help="Print summary report at the end"
+        "--summary", action="store_true", help="Print summary report at the end"
     )
 
     # Detection parameters
-    parser.add_argument("--max-components", type=int, default=1,
-                       help="Maximum allowed 3D components (default: 1)")
-    parser.add_argument("--connectivity", type=int, default=3, choices=[1, 2, 3],
-                       help="Connectivity type: 1=6-conn, 2=18-conn, 3=26-conn (default: 3)")
-    parser.add_argument("--min-area", type=int, default=10,
-                       help="Minimum area threshold for 2D noise detection (default: 10)")
-    parser.add_argument("--aspect-ratio", type=float, default=5.0,
-                       help="Aspect ratio threshold (default: 5.0)")
-    parser.add_argument("--convexity", type=float, default=0.85,
-                       help="Convexity threshold (default: 0.85)")
-    parser.add_argument("--angle-threshold", type=float, default=30.0,
-                       help="Sharp angle threshold in degrees (default: 30.0)")
-    parser.add_argument("--distance-threshold", type=float, default=5.0,
-                       help="Defect depth threshold in pixels (default: 5.0)")
-    parser.add_argument("--max-area", type=int, default=20,
-                       help="Maximum hole area for noise classification (default: 20)")
-    parser.add_argument("--threshold-air", type=float, default=20,
-                       help="Percentile threshold for air (default: 20)")
-    parser.add_argument("--threshold-soft", type=float, default=50,
-                       help="Percentile threshold for soft tissue (default: 50)")
-    parser.add_argument("--min-volume", type=int, default=50,
-                       help="Minimum anomaly region size in voxels (default: 50)")
-    parser.add_argument("--z-score", type=float, default=2.0,
-                       help="Z-score threshold (default: 2.0)")
-    parser.add_argument("--no-viz", dest="visualize", action="store_false", default=True,
-                       help="Disable visualization")
+    parser.add_argument(
+        "--max-components",
+        type=int,
+        default=1,
+        help="Maximum allowed 3D components (default: 1)",
+    )
+    parser.add_argument(
+        "--connectivity",
+        type=int,
+        default=3,
+        choices=[1, 2, 3],
+        help="Connectivity type: 1=6-conn, 2=18-conn, 3=26-conn (default: 3)",
+    )
+    parser.add_argument(
+        "--min-area",
+        type=int,
+        default=10,
+        help="Minimum area threshold for 2D noise detection (default: 10)",
+    )
+    parser.add_argument(
+        "--aspect-ratio",
+        type=float,
+        default=5.0,
+        help="Aspect ratio threshold (default: 5.0)",
+    )
+    parser.add_argument(
+        "--convexity",
+        type=float,
+        default=0.85,
+        help="Convexity threshold (default: 0.85)",
+    )
+    parser.add_argument(
+        "--angle-threshold",
+        type=float,
+        default=30.0,
+        help="Sharp angle threshold in degrees (default: 30.0)",
+    )
+    parser.add_argument(
+        "--distance-threshold",
+        type=float,
+        default=5.0,
+        help="Defect depth threshold in pixels (default: 5.0)",
+    )
+    parser.add_argument(
+        "--max-area",
+        type=int,
+        default=20,
+        help="Maximum hole area for noise classification (default: 20)",
+    )
+    parser.add_argument(
+        "--threshold-air",
+        type=float,
+        default=20,
+        help="Percentile threshold for air (default: 20)",
+    )
+    parser.add_argument(
+        "--threshold-soft",
+        type=float,
+        default=50,
+        help="Percentile threshold for soft tissue (default: 50)",
+    )
+    parser.add_argument(
+        "--min-volume",
+        type=int,
+        default=50,
+        help="Minimum anomaly region size in voxels (default: 50)",
+    )
+    parser.add_argument(
+        "--z-score", type=float, default=2.0, help="Z-score threshold (default: 2.0)"
+    )
+    parser.add_argument(
+        "--no-viz",
+        dest="visualize",
+        action="store_false",
+        default=True,
+        help="Disable visualization",
+    )
 
     args = parser.parse_args()
 
@@ -365,7 +414,7 @@ def main():
         "warning": 0,
         "failed": 0,
         "error": 0,
-        "details": []
+        "details": [],
     }
 
     for i, patient_dir in enumerate(patient_dirs, 1):
@@ -391,7 +440,7 @@ def main():
             min_volume=args.min_volume,
             z_score=args.z_score,
             visualize=args.visualize,
-            stop_on_error=not args.continue_on_error
+            stop_on_error=not args.continue_on_error,
         )
 
         all_results.append(result)
@@ -413,12 +462,14 @@ def main():
             if result["error"]:
                 print(f"  Error: {result['error']}")
 
-        summary["details"].append({
-            "patient": patient_name,
-            "status": status,
-            "checks_completed": result["checks_completed"],
-            "checks_skipped": result["checks_skipped"]
-        })
+        summary["details"].append(
+            {
+                "patient": patient_name,
+                "status": status,
+                "checks_completed": result["checks_completed"],
+                "checks_skipped": result["checks_skipped"],
+            }
+        )
 
         # Skip to next patient if requested
         if args.skip_on_error and status in ["failed", "error"]:
@@ -438,11 +489,8 @@ def main():
 
     # Save summary to JSON
     summary_file = os.path.join(root_folder, "batch_summary.json")
-    with open(summary_file, 'w') as f:
-        json.dump({
-            "summary": summary,
-            "results": all_results
-        }, f, indent=2)
+    with open(summary_file, "w") as f:
+        json.dump({"summary": summary, "results": all_results}, f, indent=2)
     print(f"\nBatch summary saved to: {summary_file}")
 
     # Detailed summary if requested
@@ -455,11 +503,13 @@ def main():
                 "passed": "✓",
                 "warning": "⚠",
                 "failed": "✗",
-                "error": "✗"
+                "error": "✗",
             }.get(detail["status"], "?")
             print(f"{status_symbol} {detail['patient']}: {detail['status'].upper()}")
-            print(f"    Completed: {', '.join(detail['checks_completed']) if detail['checks_completed'] else 'None'}")
-            if detail['checks_skipped']:
+            print(
+                f"    Completed: {', '.join(detail['checks_completed']) if detail['checks_completed'] else 'None'}"
+            )
+            if detail["checks_skipped"]:
                 print(f"    Skipped: {', '.join(detail['checks_skipped'])}")
 
     return 0

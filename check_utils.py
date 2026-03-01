@@ -5,6 +5,7 @@ from typing import Union, Dict, Any, List, Tuple, Optional
 from scipy import ndimage as ndi
 from io_utils import load_medical_image
 
+
 def detect_2d_noise(
     input_data: Union[str, np.ndarray],
     output_dir: Optional[str] = None,
@@ -12,7 +13,7 @@ def detect_2d_noise(
     box_color: Tuple[int, int, int] = (0, 0, 255),
     box_thickness: int = 2,
     box_padding: int = 5,
-    file_prefix: str = ""
+    file_prefix: str = "",
 ) -> Dict[str, Any]:
     """
     Detects 2D noise areas in mask slices and optionally visualizes them with bounding boxes.
@@ -96,7 +97,7 @@ def detect_2d_noise(
         "total_noise_regions": 0,
         "saved_images": 0,
         "output_dir": output_dir,
-        "details": {}
+        "details": {},
     }
 
     # ========== 5. Process each slice ==========
@@ -146,16 +147,25 @@ def detect_2d_noise(
                     "region_id": i,
                     "area": area,
                     "bbox": (x1, y1, x2, y2),
-                    "centroid": (float(centroids[i][0]), float(centroids[i][1]))
+                    "centroid": (float(centroids[i][0]), float(centroids[i][1])),
                 }
                 noise_regions.append(noise_region_info)
 
                 # Draw bounding box if visualization is enabled
                 if slice_color is not None:
-                    cv2.rectangle(slice_color, (x1, y1), (x2, y2), box_color, box_thickness)
+                    cv2.rectangle(
+                        slice_color, (x1, y1), (x2, y2), box_color, box_thickness
+                    )
                     label_text = f"A:{area}"
-                    cv2.putText(slice_color, label_text, (x1, max(0, y1 - 5)),
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.4, box_color, 1)
+                    cv2.putText(
+                        slice_color,
+                        label_text,
+                        (x1, max(0, y1 - 5)),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.4,
+                        box_color,
+                        1,
+                    )
 
         # ========== Update report if noise found ==========
         if noise_regions:
@@ -164,7 +174,7 @@ def detect_2d_noise(
             report["total_noise_regions"] += len(noise_regions)
             report["details"][z_index] = {
                 "noise_regions": noise_regions,
-                "num_noise_regions": len(noise_regions)
+                "num_noise_regions": len(noise_regions),
             }
 
             # Save visualization if output_dir is provided
@@ -178,9 +188,7 @@ def detect_2d_noise(
 
 
 def check_3d_connectivity(
-    input_data: Union[str, np.ndarray],
-    max_components: int = 1,
-    connectivity: int = 3
+    input_data: Union[str, np.ndarray], max_components: int = 1, connectivity: int = 3
 ) -> Dict[str, Any]:
     """
     Check if a mask contains multiple independent 3D ROIs (Regions of Interest).
@@ -261,7 +269,7 @@ def check_3d_connectivity(
             "is_valid": False,
             "error": "Empty mask - no foreground voxels found",
             "total_voxels": 0,
-            "num_3d_components": 0
+            "num_3d_components": 0,
         }
 
     # ========== 4. 3D Connected Component Analysis ==========
@@ -306,13 +314,13 @@ def check_3d_connectivity(
             "bbox": {
                 "z_range": (int(min_z), int(max_z)),
                 "y_range": (int(min_y), int(max_y)),
-                "x_range": (int(min_x), int(max_x))
+                "x_range": (int(min_x), int(max_x)),
             },
             "centroid": {
                 "z": float(centroid_z),
                 "y": float(centroid_y),
-                "x": float(centroid_x)
-            }
+                "x": float(centroid_x),
+            },
         }
 
     # Sort by volume (descending)
@@ -332,7 +340,7 @@ def check_3d_connectivity(
         "largest_component_percentage": largest_component_percentage,
         "max_components_allowed": max_components,
         "connectivity_type": connectivity,
-        "details": component_details
+        "details": component_details,
     }
 
     # Add issues if invalid
@@ -340,7 +348,7 @@ def check_3d_connectivity(
         report["issues"] = [
             f"Found {num_components} 3D connected components (expected <= {max_components})",
             f"Component volumes: {component_volumes_sorted}",
-            f"Volume percentages: {[f'{p:.1f}%' for p in volume_percentages]}"
+            f"Volume percentages: {[f'{p:.1f}%' for p in volume_percentages]}",
         ]
 
     return report
@@ -353,7 +361,7 @@ def detect_elongated_projections(
     aspect_ratio_threshold: float = 5.0,
     convexity_threshold: float = 0.85,
     visualize: bool = True,
-    leak_color: Tuple[int, int, int] = (0, 0, 255)
+    leak_color: Tuple[int, int, int] = (0, 0, 255),
 ) -> Dict[str, Any]:
     """
     Detect elongated projection leakage regions in medical segmentation masks.
@@ -410,12 +418,9 @@ def detect_elongated_projections(
         "is_valid": True,
         "total_leak_regions": 0,
         "leak_regions": [],
-        "summary": {
-            "total_leak_voxels": 0,
-            "affected_slices": []
-        },
+        "summary": {"total_leak_voxels": 0, "affected_slices": []},
         "output_dir": output_dir,
-        "visualizations": 0
+        "visualizations": 0,
     }
 
     # ========== 4. Process slice by slice ==========
@@ -438,7 +443,9 @@ def detect_elongated_projections(
         slice_leak_regions = []
 
         # Extract contours
-        contours, _ = cv2.findContours(mask_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        contours, _ = cv2.findContours(
+            mask_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
+        )
 
         for contour_idx, contour in enumerate(contours):
             # Calculate contour area
@@ -472,7 +479,7 @@ def detect_elongated_projections(
                             "area": area,
                             "aspect_ratio": aspect_ratio,
                             "convexity": convexity,
-                            "type": "elongated_projection"
+                            "type": "elongated_projection",
                         }
                         slice_leak_regions.append(leak_info)
 
@@ -480,15 +487,24 @@ def detect_elongated_projections(
                         if viz_img is not None:
                             cv2.drawContours(viz_img, [box_points], 0, leak_color, 1)
                             label = f"AR:{aspect_ratio:.1f}"
-                            cv2.putText(viz_img, label, (box_points[0][0], max(0, box_points[0][1] - 5)),
-                                       cv2.FONT_HERSHEY_SIMPLEX, 0.4, leak_color, 1)
+                            cv2.putText(
+                                viz_img,
+                                label,
+                                (box_points[0][0], max(0, box_points[0][1] - 5)),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.4,
+                                leak_color,
+                                1,
+                            )
 
         # ========== 5. Update report ==========
         if slice_leak_regions:
             report["is_valid"] = False
             report["total_leak_regions"] += len(slice_leak_regions)
             report["leak_regions"].extend(slice_leak_regions)
-            report["summary"]["total_leak_voxels"] += sum(r["area"] for r in slice_leak_regions)
+            report["summary"]["total_leak_voxels"] += sum(
+                r["area"] for r in slice_leak_regions
+            )
             report["summary"]["affected_slices"].append(z_index)
 
             # Save visualization
@@ -508,7 +524,7 @@ def detect_sharp_concavities(
     sharp_angle_threshold: float = 30.0,
     distance_threshold: float = 5.0,
     visualize: bool = True,
-    defect_color: Tuple[int, int, int] = (255, 0, 255)
+    defect_color: Tuple[int, int, int] = (255, 0, 255),
 ) -> Dict[str, Any]:
     """
     Detect sharp concave/convex defects in medical segmentation masks.
@@ -565,11 +581,9 @@ def detect_sharp_concavities(
         "total_defect_points": 0,
         "defect_points": [],
         "shape_defects": {},
-        "summary": {
-            "affected_slices": []
-        },
+        "summary": {"affected_slices": []},
         "output_dir": output_dir,
-        "visualizations": 0
+        "visualizations": 0,
     }
 
     # ========== 4. Process slice by slice ==========
@@ -592,7 +606,9 @@ def detect_sharp_concavities(
         slice_defect_points = []
 
         # Extract contours
-        contours, _ = cv2.findContours(mask_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        contours, _ = cv2.findContours(
+            mask_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
+        )
 
         for contour_idx, contour in enumerate(contours):
             # Calculate convexity defects
@@ -628,7 +644,9 @@ def detect_sharp_concavities(
                                 vec2_norm = vec2 / norm2
 
                                 # Calculate angle (degrees)
-                                dot_product = np.clip(np.dot(vec1_norm, vec2_norm), -1.0, 1.0)
+                                dot_product = np.clip(
+                                    np.dot(vec1_norm, vec2_norm), -1.0, 1.0
+                                )
                                 angle = np.arccos(dot_product) * 180.0 / np.pi
 
                                 # Detect sharp angle
@@ -640,7 +658,7 @@ def detect_sharp_concavities(
                                         "position": far,
                                         "depth": distance,
                                         "angle": angle,
-                                        "type": "sharp_concavity"
+                                        "type": "sharp_concavity",
                                     }
                                     slice_defect_points.append(defect_info)
 
@@ -675,7 +693,7 @@ def detect_ct_value_anomalies(
     min_leak_volume: int = 50,
     z_score_threshold: float = 2.0,
     visualize: bool = True,
-    anomaly_color: Tuple[int, int, int] = (255, 255, 0)
+    anomaly_color: Tuple[int, int, int] = (255, 255, 0),
 ) -> Dict[str, Any]:
     """
     Detect CT value jumps/anomalies within mask regions in medical segmentation.
@@ -738,7 +756,9 @@ def detect_ct_value_anomalies(
 
         # Check dimension matching
         if ct.shape != mask.shape:
-            raise ValueError(f"CT image shape {ct.shape} does not match mask shape {mask.shape}.")
+            raise ValueError(
+                f"CT image shape {ct.shape} does not match mask shape {mask.shape}."
+            )
 
     # Standardize to 3D
     if mask.ndim == 2:
@@ -756,11 +776,9 @@ def detect_ct_value_anomalies(
         "total_anomaly_voxels": 0,
         "anomaly_regions": [],
         "ct_anomalies": {},
-        "summary": {
-            "affected_slices": []
-        },
+        "summary": {"affected_slices": []},
         "output_dir": output_dir,
-        "visualizations": 0
+        "visualizations": 0,
     }
 
     # Skip if CT data not available or check is disabled
@@ -805,7 +823,9 @@ def detect_ct_value_anomalies(
         upper_bound = q75_hu + 3.0 * iqr_hu
 
         # Detect CT value anomaly regions inside mask
-        anomaly_mask = (mask_binary > 0) & ((slice_ct < lower_bound) | (slice_ct > upper_bound))
+        anomaly_mask = (mask_binary > 0) & (
+            (slice_ct < lower_bound) | (slice_ct > upper_bound)
+        )
         anomaly_count = np.sum(anomaly_mask)
 
         if anomaly_count == 0:
@@ -819,7 +839,7 @@ def detect_ct_value_anomalies(
 
         # Check each anomaly connected region (skip label 0 which is background)
         for label_id in range(1, num_anomaly_labels):
-            region_mask = (anomaly_labels == label_id)
+            region_mask = anomaly_labels == label_id
             region_size = np.sum(region_mask)
 
             # Only focus on sufficiently large anomaly regions (possibly leakage)
@@ -842,7 +862,10 @@ def detect_ct_value_anomalies(
                         "global_mean_hu": float(mean_hu),
                         "global_std_hu": float(std_hu),
                         "z_score": float(z_score),
-                        "hu_range": (float(np.min(region_hu_values)), float(np.max(region_hu_values)))
+                        "hu_range": (
+                            float(np.min(region_hu_values)),
+                            float(np.max(region_hu_values)),
+                        ),
                     }
                     slice_anomaly_voxels.append(anomaly_info)
 
@@ -859,13 +882,22 @@ def detect_ct_value_anomalies(
                             center_y = int(np.mean(indices[0]))
                             center_x = int(np.mean(indices[1]))
                             label = f"HU:{int(region_mean_hu)}"
-                            cv2.putText(viz_img, label, (center_x, center_y),
-                                       cv2.FONT_HERSHEY_SIMPLEX, 0.4, anomaly_color, 1)
+                            cv2.putText(
+                                viz_img,
+                                label,
+                                (center_x, center_y),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.4,
+                                anomaly_color,
+                                1,
+                            )
 
         # ========== 5. Update report ==========
         if slice_anomaly_voxels:
             report["is_valid"] = False
-            report["total_anomaly_voxels"] += sum(a["voxel_count"] for a in slice_anomaly_voxels)
+            report["total_anomaly_voxels"] += sum(
+                a["voxel_count"] for a in slice_anomaly_voxels
+            )
             report["anomaly_regions"].extend(slice_anomaly_voxels)
             report["ct_anomalies"][z_index] = slice_anomaly_voxels
             report["summary"]["affected_slices"].append(z_index)
@@ -889,7 +921,7 @@ def detect_internal_holes(
     visualize: bool = True,
     threshold_air: float = 20,
     threshold_soft: float = 50,
-    hole_color: Tuple[int, int, int] = (0, 255, 255)
+    hole_color: Tuple[int, int, int] = (0, 255, 255),
 ) -> Dict[str, Any]:
     """
     Detect internal holes/noise (erased tissue) within foreground regions in medical segmentation masks.
@@ -955,7 +987,9 @@ def detect_internal_holes(
 
     # Check dimension matching
     if ct.shape != mask.shape:
-        raise ValueError(f"CT image shape {ct.shape} does not match mask shape {mask.shape}.")
+        raise ValueError(
+            f"CT image shape {ct.shape} does not match mask shape {mask.shape}."
+        )
 
     # Standardize to 3D
     if mask.ndim == 2:
@@ -972,12 +1006,9 @@ def detect_internal_holes(
         "is_valid": True,
         "total_hole_count": 0,
         "noise_holes": [],
-        "summary": {
-            "total_noise_voxels": 0,
-            "affected_slices": []
-        },
+        "summary": {"total_noise_voxels": 0, "affected_slices": []},
         "output_dir": output_dir,
-        "visualizations": 0
+        "visualizations": 0,
     }
 
     # ========== 4. Process slice by slice ==========
@@ -1001,10 +1032,14 @@ def detect_internal_holes(
         slice_noise_holes = []
 
         # Find contours of the mask
-        contours, _ = cv2.findContours(mask_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        contours, _ = cv2.findContours(
+            mask_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
+        )
 
         # Create a mask filled with mask content, then find holes by subtraction
-        mask_filled = cv2.drawContours(np.zeros_like(mask_binary), contours, 0, 1, thickness=cv2.FILLED)
+        mask_filled = cv2.drawContours(
+            np.zeros_like(mask_binary), contours, 0, 1, thickness=cv2.FILLED
+        )
         holes_mask = mask_binary ^ mask_filled  # XOR to find holes (0 or 1)
 
         # Calculate histogram statistics of the mask (excluding holes) for relative classification
@@ -1022,7 +1057,7 @@ def detect_internal_holes(
         num_holes, holes_labels = cv2.connectedComponents(holes_mask, connectivity=8)
 
         for hole_id in range(1, num_holes):  # Skip background (label 0)
-            hole_mask = (holes_labels == hole_id)
+            hole_mask = holes_labels == hole_id
             hole_area = np.sum(hole_mask)
 
             # Get hole's center for labeling
@@ -1035,7 +1070,10 @@ def detect_internal_holes(
             # Get CT values in hole
             hole_hu_values = slice_ct[hole_mask]
             hole_mean_hu = float(np.mean(hole_hu_values))
-            hole_hu_range = (float(np.min(hole_hu_values)), float(np.max(hole_hu_values)))
+            hole_hu_range = (
+                float(np.min(hole_hu_values)),
+                float(np.max(hole_hu_values)),
+            )
 
             # Determine if this is a noise hole (erased tissue) or normal cavity
             reason = ""
@@ -1064,7 +1102,7 @@ def detect_internal_holes(
                 "mean_hu": hole_mean_hu,
                 "hu_range": hole_hu_range,
                 "reason": reason,
-                "type": "noise_hole"
+                "type": "noise_hole",
             }
 
             # Add to noise holes list
@@ -1072,18 +1110,32 @@ def detect_internal_holes(
 
             # Visualization for noise holes
             if viz_img is not None:
-                cv2.circle(viz_img, (center_x, center_y), max(3, int(np.sqrt(hole_area))),
-                          hole_color, 1)
+                cv2.circle(
+                    viz_img,
+                    (center_x, center_y),
+                    max(3, int(np.sqrt(hole_area))),
+                    hole_color,
+                    1,
+                )
                 label = f"N:{hole_area}"
-                cv2.putText(viz_img, label, (center_x + 5, center_y),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.4, hole_color, 1)
+                cv2.putText(
+                    viz_img,
+                    label,
+                    (center_x + 5, center_y),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.4,
+                    hole_color,
+                    1,
+                )
 
         # ========== 5. Update report ==========
         if slice_noise_holes:
             report["is_valid"] = False
             report["total_hole_count"] += len(slice_noise_holes)
             report["noise_holes"].extend(slice_noise_holes)
-            report["summary"]["total_noise_voxels"] += sum(h["area"] for h in slice_noise_holes)
+            report["summary"]["total_noise_voxels"] += sum(
+                h["area"] for h in slice_noise_holes
+            )
             report["summary"]["affected_slices"].append(z_index)
 
             # Save visualization

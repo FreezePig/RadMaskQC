@@ -13,6 +13,7 @@ from pathlib import Path
 # Optional imports for medical imaging formats
 try:
     import nibabel as nib
+
     NIBABEL_AVAILABLE = True
 except ImportError:
     NIBABEL_AVAILABLE = False
@@ -22,6 +23,7 @@ except ImportError:
 try:
     import pydicom
     from pydicom import dcmread
+
     PYDICOM_AVAILABLE = True
 except ImportError:
     PYDICOM_AVAILABLE = False
@@ -30,9 +32,7 @@ except ImportError:
 
 
 def load_medical_image(
-    input_path: Union[str, Path],
-    return_meta: bool = False,
-    reorient: bool = True
+    input_path: Union[str, Path], return_meta: bool = False, reorient: bool = True
 ) -> Union[np.ndarray, Tuple[np.ndarray, dict]]:
     """
     Load medical image files (NIfTI, DICOM, or NPY) into numpy arrays.
@@ -84,23 +84,25 @@ def load_medical_image(
     suffix = input_path.suffix.lower()
 
     # Handle .nii.gz (double extension)
-    if suffix == '.gz' and input_path.stem.endswith('.nii'):
-        suffix = '.nii.gz'
+    if suffix == ".gz" and input_path.stem.endswith(".nii"):
+        suffix = ".nii.gz"
 
     metadata = {}
 
     # Load based on file type
-    if suffix in ['.npy']:
+    if suffix in [".npy"]:
         # NumPy array file
         array = np.load(input_path)
-        metadata['format'] = 'npy'
-        metadata['shape'] = array.shape
-        metadata['shape_original'] = array.shape
+        metadata["format"] = "npy"
+        metadata["shape"] = array.shape
+        metadata["shape_original"] = array.shape
 
-    elif suffix in ['.nii', '.nii.gz']:
+    elif suffix in [".nii", ".nii.gz"]:
         # NIfTI file
         if not NIBABEL_AVAILABLE:
-            raise ValueError("nibabel is required to read NIfTI files. Install with: pip install nibabel")
+            raise ValueError(
+                "nibabel is required to read NIfTI files. Install with: pip install nibabel"
+            )
 
         nii_img = nib.load(input_path)
         array = nii_img.get_fdata()
@@ -113,25 +115,27 @@ def load_medical_image(
                 # Transpose from (x, y, z) to (z, y, x)
                 # This gives us (depth, height, width) order
                 array = np.transpose(array, (2, 1, 0))
-                metadata['reoriented'] = True
-                metadata['original_shape'] = original_shape
-                metadata['original_orientation'] = '(x, y, z)'
+                metadata["reoriented"] = True
+                metadata["original_shape"] = original_shape
+                metadata["original_orientation"] = "(x, y, z)"
             else:
-                metadata['reoriented'] = False
+                metadata["reoriented"] = False
         else:
-            metadata['reoriented'] = False
+            metadata["reoriented"] = False
 
         # Extract metadata
-        metadata['format'] = 'nifti'
-        metadata['shape'] = array.shape
-        metadata['affine'] = nii_img.affine
-        metadata['voxel_size'] = nii_img.header.get_zooms()[:3]
-        metadata['header'] = nii_img.header
+        metadata["format"] = "nifti"
+        metadata["shape"] = array.shape
+        metadata["affine"] = nii_img.affine
+        metadata["voxel_size"] = nii_img.header.get_zooms()[:3]
+        metadata["header"] = nii_img.header
 
-    elif suffix in ['.dcm', '.dicom', '']:
+    elif suffix in [".dcm", ".dicom", ""]:
         # DICOM file (single) or DICOM series (folder)
         if not PYDICOM_AVAILABLE:
-            raise ValueError("pydicom is required to read DICOM files. Install with: pip install pydicom")
+            raise ValueError(
+                "pydicom is required to read DICOM files. Install with: pip install pydicom"
+            )
 
         if input_path.is_file():
             # Single DICOM file
@@ -143,8 +147,10 @@ def load_medical_image(
             raise FileNotFoundError(f"Invalid DICOM path: {input_path}")
 
     else:
-        raise ValueError(f"Unsupported file format: {suffix}. "
-                        f"Supported formats: .npy, .nii, .nii.gz, .dcm, .dicom folders")
+        raise ValueError(
+            f"Unsupported file format: {suffix}. "
+            f"Supported formats: .npy, .nii, .nii.gz, .dcm, .dicom folders"
+        )
 
     if return_meta:
         return array, metadata
@@ -168,18 +174,18 @@ def _load_single_dicom(dicom_path: Path) -> Tuple[np.ndarray, dict]:
     array = dcm.pixel_array
 
     # Apply rescale slope and intercept if available (convert to Hounsfield Units for CT)
-    if hasattr(dcm, 'RescaleSlope') and hasattr(dcm, 'RescaleIntercept'):
-        slope = getattr(dcm, 'RescaleSlope', 1)
-        intercept = getattr(dcm, 'RescaleIntercept', 0)
+    if hasattr(dcm, "RescaleSlope") and hasattr(dcm, "RescaleIntercept"):
+        slope = getattr(dcm, "RescaleSlope", 1)
+        intercept = getattr(dcm, "RescaleIntercept", 0)
         array = array.astype(np.float32) * slope + intercept
 
     metadata = {
-        'format': 'dicom',
-        'shape': array.shape,
-        'patient_id': getattr(dcm, 'PatientID', 'unknown'),
-        'study_date': getattr(dcm, 'StudyDate', 'unknown'),
-        'modality': getattr(dcm, 'Modality', 'unknown'),
-        'series_description': getattr(dcm, 'SeriesDescription', 'unknown'),
+        "format": "dicom",
+        "shape": array.shape,
+        "patient_id": getattr(dcm, "PatientID", "unknown"),
+        "study_date": getattr(dcm, "StudyDate", "unknown"),
+        "modality": getattr(dcm, "Modality", "unknown"),
+        "series_description": getattr(dcm, "SeriesDescription", "unknown"),
     }
 
     return array, metadata
@@ -207,7 +213,9 @@ def _load_dicom_series(folder_path: Path) -> Tuple[np.ndarray, dict]:
                 # Try to read as DICOM
                 dcm = dcmread(file_path, stop_before_pixels=True)
                 # Check if it has the required DICOM attributes
-                if hasattr(dcm, 'SliceLocation') or hasattr(dcm, 'ImagePositionPatient'):
+                if hasattr(dcm, "SliceLocation") or hasattr(
+                    dcm, "ImagePositionPatient"
+                ):
                     dicom_files.append((file_path, dcm))
             except Exception:
                 # Not a valid DICOM file, skip
@@ -220,11 +228,11 @@ def _load_dicom_series(folder_path: Path) -> Tuple[np.ndarray, dict]:
     def get_slice_position(item):
         _, dcm = item
         # Try different DICOM attributes for slice position
-        if hasattr(dcm, 'SliceLocation'):
+        if hasattr(dcm, "SliceLocation"):
             return dcm.SliceLocation
-        elif hasattr(dcm, 'ImagePositionPatient'):
+        elif hasattr(dcm, "ImagePositionPatient"):
             return float(dcm.ImagePositionPatient[2])  # Z-coordinate
-        elif hasattr(dcm, 'InstanceNumber'):
+        elif hasattr(dcm, "InstanceNumber"):
             return dcm.InstanceNumber
         else:
             return 0
@@ -240,9 +248,9 @@ def _load_dicom_series(folder_path: Path) -> Tuple[np.ndarray, dict]:
         slice_array = dcm.pixel_array
 
         # Apply rescale slope and intercept if available
-        if hasattr(dcm, 'RescaleSlope') and hasattr(dcm, 'RescaleIntercept'):
-            slope = getattr(dcm, 'RescaleSlope', 1)
-            intercept = getattr(dcm, 'RescaleIntercept', 0)
+        if hasattr(dcm, "RescaleSlope") and hasattr(dcm, "RescaleIntercept"):
+            slope = getattr(dcm, "RescaleSlope", 1)
+            intercept = getattr(dcm, "RescaleIntercept", 0)
             slice_array = slice_array.astype(np.float32) * slope + intercept
 
         slices.append(slice_array)
@@ -250,13 +258,13 @@ def _load_dicom_series(folder_path: Path) -> Tuple[np.ndarray, dict]:
         # Store metadata from first file
         if metadata is None:
             metadata = {
-                'format': 'dicom_series',
-                'num_slices': len(dicom_files),
-                'shape': (len(dicom_files),) + slice_array.shape,
-                'patient_id': getattr(dcm, 'PatientID', 'unknown'),
-                'study_date': getattr(dcm, 'StudyDate', 'unknown'),
-                'modality': getattr(dcm, 'Modality', 'unknown'),
-                'series_description': getattr(dcm, 'SeriesDescription', 'unknown'),
+                "format": "dicom_series",
+                "num_slices": len(dicom_files),
+                "shape": (len(dicom_files),) + slice_array.shape,
+                "patient_id": getattr(dcm, "PatientID", "unknown"),
+                "study_date": getattr(dcm, "StudyDate", "unknown"),
+                "modality": getattr(dcm, "Modality", "unknown"),
+                "series_description": getattr(dcm, "SeriesDescription", "unknown"),
             }
 
     # Stack into 3D volume
@@ -266,9 +274,7 @@ def _load_dicom_series(folder_path: Path) -> Tuple[np.ndarray, dict]:
 
 
 def save_as_npy(
-    array: np.ndarray,
-    output_path: Union[str, Path],
-    compress: bool = True
+    array: np.ndarray, output_path: Union[str, Path], compress: bool = True
 ) -> str:
     """
     Save a numpy array as .npy file.
@@ -291,8 +297,8 @@ def save_as_npy(
     output_path = Path(output_path)
 
     # Ensure .npy extension
-    if output_path.suffix != '.npy':
-        output_path = output_path.with_suffix('.npy')
+    if output_path.suffix != ".npy":
+        output_path = output_path.with_suffix(".npy")
 
     # Create parent directory if it doesn't exist
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -310,7 +316,7 @@ def convert_medical_to_npy(
     input_path: Union[str, Path],
     output_path: Optional[Union[str, Path]] = None,
     compress: bool = True,
-    reorient: bool = True
+    reorient: bool = True,
 ) -> Union[str, np.ndarray]:
     """
     Convert medical image file (NIfTI, DICOM) to .npy format.
@@ -348,6 +354,7 @@ def convert_medical_to_npy(
         return array
     else:
         output_path = Path(output_path)
+
     saved_path = save_as_npy(array, output_path, compress=compress)
 
     return saved_path
@@ -378,41 +385,43 @@ def get_image_info(input_path: Union[str, Path]) -> dict:
     suffix = input_path.suffix.lower()
 
     # Handle .nii.gz (double extension)
-    if suffix == '.gz' and input_path.stem.endswith('.nii'):
-        suffix = '.nii.gz'
+    if suffix == ".gz" and input_path.stem.endswith(".nii"):
+        suffix = ".nii.gz"
 
-    info = {'path': str(input_path)}
+    info = {"path": str(input_path)}
 
-    if suffix in ['.npy']:
+    if suffix in [".npy"]:
         # For NPY, we need to load to get shape
-        array = np.load(input_path, mmap_mode='r')
-        info['format'] = 'npy'
-        info['shape'] = array.shape
-        info['dtype'] = str(array.dtype)
-        info['size_mb'] = array.nbytes / (1024 * 1024)
+        array = np.load(input_path, mmap_mode="r")
+        info["format"] = "npy"
+        info["shape"] = array.shape
+        info["dtype"] = str(array.dtype)
+        info["size_mb"] = array.nbytes / (1024 * 1024)
 
-    elif suffix in ['.nii', '.nii.gz']:
+    elif suffix in [".nii", ".nii.gz"]:
         if not NIBABEL_AVAILABLE:
             raise ValueError("nibabel is required to read NIfTI files.")
 
         nii_img = nib.load(input_path)
-        info['format'] = 'nifti'
-        info['shape'] = nii_img.shape
-        info['dtype'] = str(nii_img.get_data_dtype())
-        info['voxel_size'] = nii_img.header.get_zooms()[:3]
-        info['affine'] = nii_img.affine.tolist()
+        info["format"] = "nifti"
+        info["shape"] = nii_img.shape
+        info["dtype"] = str(nii_img.get_data_dtype())
+        info["voxel_size"] = nii_img.header.get_zooms()[:3]
+        info["affine"] = nii_img.affine.tolist()
 
-    elif suffix in ['.dcm', '.dicom', '']:
+    elif suffix in [".dcm", ".dicom", ""]:
         if not PYDICOM_AVAILABLE:
             raise ValueError("pydicom is required to read DICOM files.")
 
         if input_path.is_file():
             dcm = dcmread(input_path, stop_before_pixels=True)
-            info['format'] = 'dicom'
-            info['shape'] = (dcm.Rows, dcm.Columns)
-            info['dtype'] = str(dcm.pixel_array.dtype if hasattr(dcm, 'pixel_array') else 'unknown')
-            info['patient_id'] = getattr(dcm, 'PatientID', 'unknown')
-            info['modality'] = getattr(dcm, 'Modality', 'unknown')
+            info["format"] = "dicom"
+            info["shape"] = (dcm.Rows, dcm.Columns)
+            info["dtype"] = str(
+                dcm.pixel_array.dtype if hasattr(dcm, "pixel_array") else "unknown"
+            )
+            info["patient_id"] = getattr(dcm, "PatientID", "unknown")
+            info["modality"] = getattr(dcm, "Modality", "unknown")
         elif input_path.is_dir():
             # Count DICOM files in folder
             dicom_count = 0
@@ -423,8 +432,8 @@ def get_image_info(input_path: Union[str, Path]) -> dict:
                         dicom_count += 1
                     except Exception:
                         continue
-            info['format'] = 'dicom_series'
-            info['num_files'] = dicom_count
+            info["format"] = "dicom_series"
+            info["num_files"] = dicom_count
 
     else:
         raise ValueError(f"Unsupported file format: {suffix}")
