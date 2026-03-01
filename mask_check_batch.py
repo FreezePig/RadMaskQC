@@ -35,10 +35,14 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 # Import all detection functions from mask_clean
-from check_utils import (check_3d_connectivity, detect_2d_noise,
-                         detect_ct_value_anomalies,
-                         detect_elongated_projections, detect_internal_holes,
-                         detect_sharp_concavities)
+from check_utils import (
+    check_3d_connectivity,
+    detect_2d_noise,
+    detect_ct_value_anomalies,
+    detect_elongated_projections,
+    detect_internal_holes,
+    detect_sharp_concavities,
+)
 
 
 def process_single_case(
