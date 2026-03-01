@@ -5,10 +5,11 @@ This module provides functions to read common medical imaging file formats
 (NIfTI, DICOM) and convert them to numpy arrays or save as .npy files.
 """
 
-import numpy as np
 import os
-from typing import Union, Optional, Tuple
 from pathlib import Path
+from typing import Optional, Tuple, Union
+
+import numpy as np
 
 # Optional imports for medical imaging formats
 try:

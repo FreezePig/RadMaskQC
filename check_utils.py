@@ -1,8 +1,10 @@
+import os
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import cv2
 import numpy as np
-import os
-from typing import Union, Dict, Any, List, Tuple, Optional
 from scipy import ndimage as ndi
+
 from io_utils import load_medical_image
 
 
